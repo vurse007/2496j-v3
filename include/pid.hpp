@@ -29,7 +29,7 @@ public:
 
     double speed = 0;
 
-    static int count;
+    int count;
 
     double integralThreshold;
     double maxIntegral;

@@ -67,6 +67,21 @@ double inches_to_chassis_ticks(double inches, double wheel_diameter, double tick
     return (inches)*(ticks_per_rev/(3.14*wheel_diameter));
 }
 
+//lady brown macro util
+bool lbPID = false;
+double ladyBrownTarget = 329.00;
+double ladyBrownPos;
+PID ladyBrownPID(-3, -0, -0, 1000, 1000, 127);
+void ladyBrownTask(){
+    while (1){
+        ladyBrownPos = (glb::ldbrotation.get_angle())/100;
+        double ladyBrownError = (ladyBrownTarget - ladyBrownPos);
+		if (lbPID == true){
+			glb::ldb.move(ladyBrownPID.calculate(ladyBrownError));
+		}
+    }
+}
+
 
 //stall protection and color sort util:
 bool intakeInterrupt = false;

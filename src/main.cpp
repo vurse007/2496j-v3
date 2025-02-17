@@ -32,23 +32,23 @@ void driverProfileAyush(){
 	}
 
 	//lady brown code below
-	// if (con.get_digital_new_press(E_CONTROLLER_DIGITAL_UP)){
-	// 	lbPID = true;
-	// }
+	if (con.get_digital_new_press(E_CONTROLLER_DIGITAL_UP)){
+		lbPID = true;
+	}
 	
-	// else{
-	// 	if (con.get_digital(E_CONTROLLER_DIGITAL_L1)){
-	// 		ldb.move(127);
-	// 		lbPID = false;
-	// 	}
-	// 	else if (con.get_digital(E_CONTROLLER_DIGITAL_L2)){
-	// 		ldb.move(-127);
-	// 		lbPID = false;
-	// 	}
-	// 	else{
-	// 		ldb.move(0);
-	// 	}
-	// }
+	else{
+		if (con.get_digital(E_CONTROLLER_DIGITAL_L1)){
+			ldb.move(127);
+			lbPID = false;
+		}
+		else if (con.get_digital(E_CONTROLLER_DIGITAL_L2)){
+			ldb.move(-127);
+			lbPID = false;
+		}
+		else{
+			ldb.move(0);
+		}
+	}
 
 	//clamp and auto clamp code
 	if (con.get_digital_new_press(E_CONTROLLER_DIGITAL_B)){
@@ -164,7 +164,10 @@ void initialize() {
 
 	pros::lcd::register_btn1_cb(on_center_button);
 
+	ldb.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+
 	//pros::Task stallProtector(stallProtection);
+	pros::Task ladyBrownMacroTask(ladyBrownTask);
 
 	//updating PID objects
 	default_drive_pid.update_constants(10, 100, 10, 300, 10000, 127);
@@ -227,7 +230,7 @@ void autonomous() {
 void opcontrol() {
 
 	while (true) {
-		ldb.move(-70);
+		driverProfileAyush();
 
 		delay(5);
 	}

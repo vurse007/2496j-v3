@@ -1,5 +1,6 @@
 #pragma once
 #include "api.h"
+#include "pid.hpp"
 
 class timer {
     private:
@@ -37,6 +38,12 @@ extern tPoly driveKDTPOLY;
 //pid util
 double inches_to_chassis_ticks(double inches, double wheel_diameter = 3.25, double ticks_per_rev = 300);
 
+//lady brown macro util
+extern bool lbPID;
+extern double ladyBrownTarget;
+extern double ladyBrownPos;
+extern PID ladyBrownPID;
+void ladyBrownTask();
 
 //stall protection and color sort util
 extern bool intakeInterrupt;
