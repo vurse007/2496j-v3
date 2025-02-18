@@ -79,6 +79,7 @@ void ladyBrownTask(){
 		if (lbPID == true){
 			glb::ldb.move(ladyBrownPID.calculate(ladyBrownError));
 		}
+        pros::delay(5);
     }
 }
 
