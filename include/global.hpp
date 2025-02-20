@@ -6,7 +6,7 @@ namespace glb{
     #define P_FR 15
     #define P_FL 11
     #define P_MR 17
-    #define P_ML 4
+    #define P_ML 14
     #define P_BR 10
     #define P_BL 8
 
@@ -17,7 +17,7 @@ namespace glb{
     #define P_INTAKE_LIFT 'B'
     #define P_DOINKER 'C'
 
-    #define P_IMU 21
+    #define P_IMU 20
     #define P_LDB_ROTATION 20
     #define P_AUTOCLAMP 19
     #define P_COLORSORT 18

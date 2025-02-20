@@ -89,19 +89,20 @@ void PID::reset_PID(){
 
 //creating blank pid objects to be updated with values later in init function
 PID default_drive_pid(0.0, 0.0, 0.0, 0.0, 0.0);
+PID default_drive_mogo_pid(0.0, 0.0, 0.0, 0.0, 0.0);
 PID heading_correction_pid(0.0, 0.0, 0.0, 0.0, 0.0);
 
 void drive(double target, std::string_view units, std::optional<double> timeout, double chainPos, std::optional<double> speed_limit, PID* pid){
 
     //based on value passed into the function, convert into motor encoder ticks
-    if (units == ticks){
-        target = target;
-    } else if (units == inches){
-        target = inches_to_chassis_ticks(target);
-    }
-    else if (units == tiles){
-        target = inches_to_chassis_ticks(target*24);
-    }
+    // if (units == M_TICKS){
+    //     target = target;
+    // } else if (units == M_INCHES){
+    //     target = inches_to_chassis_ticks(target);
+    // }
+    // else if (units == M_TILES){
+    //     target = inches_to_chassis_ticks(target*24);
+    // }
 
     //for motion chaining
     bool chain;
@@ -109,6 +110,7 @@ void drive(double target, std::string_view units, std::optional<double> timeout,
         chain = false;
     } else{
         chain = true;
+        //target = target + chainPos;
     }
 
     //for timeouts
@@ -126,6 +128,10 @@ void drive(double target, std::string_view units, std::optional<double> timeout,
         double tpolyKDOutput = driveKDTPOLY.evaluate(target);
         pid->update_constants(std::nullopt, std::nullopt, tpolyKDOutput);
     }
+    else if (pid == &default_drive_mogo_pid){
+        double tpolyKDOutput = driveMogoKDTPOLY.evaluate(target);
+        pid->update_constants(std::nullopt, std::nullopt, tpolyKDOutput);
+    }
 
     chassis.tare_position();
     pid->reset_PID();
@@ -134,6 +140,8 @@ void drive(double target, std::string_view units, std::optional<double> timeout,
     double initialHeading = imu.get_heading();
 
     driveTimer.start();
+
+    con.clear();
 
     while (true){
         //force timeout check
@@ -159,7 +167,7 @@ void drive(double target, std::string_view units, std::optional<double> timeout,
         rchassis.move(speed - headingCorrection);
 
         //debugging with printing error to controller screen
-        con.print(0,0, "error: %lf", driveError);
+        con.print(0,0, "prt: %lf", driveError);
         
         //settling
         if (pid->settled(10, 250)){
@@ -173,5 +181,76 @@ void drive(double target, std::string_view units, std::optional<double> timeout,
 
         pros::delay(5);
     }
+    chassis.move(0);
     
+}
+
+void turn(double target, std::optional<double> timeout, double chainPos, std::optional<double> speed_limit, PID* pid){
+    //for motion chaining
+    bool chain;
+    if (chainPos == 0){
+        chain = false;
+    } else {
+        chain = true;
+        target = target + chainPos;
+    }
+
+    //for timeouts
+    timer turnTimer(-1);
+    if (timeout.has_value()){
+        turnTimer.set_target(timeout.value());
+    }
+    else {
+        double tpolyTimeoutOutput = turnTimeoutTPOLY.evaluate(target);
+        turnTimer.set_target(tpolyTimeoutOutput);
+    }
+
+    //for tpoly kd values
+    if (pid == &default_turn_pid){ //if default is used, nothing special requested
+        double tpolyKDOutput = turnKDTPOLY.evaluate(target);
+        pid->update_constants(std::nullopt, std::nullopt, tpolyKDOutput);
+    }
+    else if (pid == &default_drive_mogo_pid){
+        double tpolyKDOutput = driveMogoKDTPOLY.evaluate(target);
+        pid->update_constants(std::nullopt, std::nullopt, tpolyKDOutput);
+    }
+
+    chassis.tare_position();
+    pid->reset_PID();
+
+    turnTimer.start();
+
+    while (true){
+        //force timeout check
+        if (turnTimer.targetReached()){
+            break;
+        }
+
+        //turn logic
+        double currentHeading = imu.get_heading();
+        double headingError = fmod(target - currentHeading + 360, 360);
+        if (headingError > 180) {
+            headingError -= 360;
+        }
+        double speed = pid->calculate(headingError, 127);
+
+        //ouput speeds
+        lchassis.move(speed);
+        rchassis.move(speed);
+
+        //debugging with printing error to controller screen
+        con.print(0,0, "error: %lf", headingError);
+        
+        //settling
+        if (pid->settled(10, 250)){
+            break;
+        }
+
+        //chaining movements
+        if (chain == true && fabs(headingError) <= chainPos){
+            break;
+        }
+
+        pros::delay(5);
+    }
 }

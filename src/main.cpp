@@ -171,7 +171,7 @@ void initialize() {
 
 	//updating PID objects
 	default_drive_pid.update_constants(10, 100, 10, 300, 10000, 127);
-	heading_correction_pid.update_constants(5, 50, 5, 15, 10000, 127);
+	heading_correction_pid.update_constants(0, 0, 0, 15, 10000, 127);
 
 	//updating tPoly objects
 	driveTimeoutTPOLY.update_coefficients({5000});
@@ -210,8 +210,8 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
-	PID test(1,0,0,1000,1000,127);
-	drive(1000, ticks, 5000, 0, std::nullopt, &test);
+	PID test(0.8,0,0,1000,1000,127);
+	drive(1000, M_TICKS, 5000, 0, std::nullopt, &test);
 }
 
 /**

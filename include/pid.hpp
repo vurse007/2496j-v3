@@ -7,9 +7,10 @@
 #include <optional>
 
 // Macros for easy function passing
-constexpr std::string_view ticks = "passed as ticks";
-constexpr std::string_view inches = "passed as inches";
-constexpr std::string_view tiles = "passed as tiles";
+#define M_INCHES "passed as inches"
+#define M_TILES "passed as tiles"
+#define M_TICKS "passed as ticks"
+#define M_MOGO &default_drive_mogo_pid
 
 
 // PID Class
@@ -43,7 +44,13 @@ public:
 };
 
 extern PID default_drive_pid;
+extern PID default_drive_mogo_pid;
+extern PID default_turn_pid;
+extern PID default_turn_mogo_pid;
 extern PID heading_correction_pid;
 
 // Function declaration for drive
-void drive(double target, std::string_view units = inches, std::optional<double> timeout = std::nullopt, double chainPos = 0, std::optional<double> speed_limit = std::nullopt, PID* pid = &default_drive_pid);
+void drive(double target, std::string_view units = M_INCHES, std::optional<double> timeout = std::nullopt, double chainPos = 0, std::optional<double> speed_limit = std::nullopt, PID* pid = &default_drive_pid);
+
+//function declaration for absolute turns
+void turn(double target, std::optional<double> timeout = std::nullopt, double chainPos = 0, std::optional<double> speed_limit = std::nullopt, PID* pid = &default_turn_pid);

@@ -12,6 +12,7 @@ void timer::set_target(double target){
 
 void timer::start(){
     this->startTime = pros::millis();
+    this->running = true;
 }
 
 double timer::getTime(){
@@ -20,6 +21,7 @@ double timer::getTime(){
 
 bool timer::targetReached(){
     if (this->getTime() >= this->targetTime){
+        this->running = false;
         return true;
     } else{
         return false;
@@ -28,10 +30,12 @@ bool timer::targetReached(){
 
 void timer::reset(double target=-1){
     this->startTime = pros::millis();
+    this->running = true;
     if (target != -1){
         this->targetTime = target;
     }
 }
+
 
 
 //tpoly object functions:
@@ -59,7 +63,9 @@ long double tPoly::scientificNotation(double number, double exponent){
 tPoly driveTimeoutTPOLY({0});
 tPoly turnTimeoutTPOLY({0});
 tPoly turnKDTPOLY({0});
+tPoly turnMogoKDTPOLY({0});
 tPoly driveKDTPOLY({0});
+tPoly driveMogoKDTPOLY({0});
 
 
 //pid util:
@@ -86,25 +92,30 @@ void ladyBrownTask(){
 
 //stall protection and color sort util:
 bool intakeInterrupt = false;
-void stallProtection(){
-    timer stallProtectionTimer(500);
+void stallProtection() {
+    timer stallTimer(1000);
+    timer reverseTimer(1000);
     int returnVelocity = 0;
-    while (1){
-        if(abs(glb::intake.get_actual_velocity()) <= 10 && glb::intake.get_target_velocity() != 0){
-            stallProtectionTimer.start();
+    glb::con.clear();
+
+    while (1) {
+        
+        if (abs(glb::intake.get_actual_velocity()) <= 127 && glb::intake.get_target_velocity() != 0 && stallTimer.running == false) {
             returnVelocity = glb::intake.get_target_velocity();
+            stallTimer.start(); //if stalled start the stall timer
         }
-        if (stallProtectionTimer.targetReached()){
-            if (intakeInterrupt == false){
-                intakeInterrupt = true;
-                glb::intake.move(0);
-                stallProtectionTimer.reset();
-            }
-            else if (intakeInterrupt == true){
-                intakeInterrupt = false;
+        if (stallTimer.targetReached()){
+            if (abs(glb::intake.get_actual_velocity()) <= 1 && glb::intake.get_target_velocity() != 0){
+                glb::intake.move(-127); //if the intake is still stalling after timer expires
+                reverseTimer.start();
+                while (reverseTimer.targetReached() == false){
+                    pros::delay(5); //lock out while reverser timer is counting
+                }
                 glb::intake.move(returnVelocity);
             }
         }
-        pros::delay(20);
+        
+        pros::delay(5);
+        glb::con.print(0,0,"time: %d", stallTimer.getTime());
     }
 }
